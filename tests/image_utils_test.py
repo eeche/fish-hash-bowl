@@ -57,10 +57,13 @@ def get_stored_hash(image_name):
 
 def register_hash(image_name):
     """해시값을 로컬에 등록하는 함수"""
-    image_hash = calculate_hash(image_name)
-    save_hash(image_name, image_hash)
-    print(f"Hash for {image_name} registered successfully.")
-    return image_hash
+    if not get_stored_hash(image_name): 
+        image_hash = calculate_hash(image_name)
+        save_hash(image_name, image_hash)
+        print(f"Hash for {image_name} registered successfully.")
+    else :
+        print(f"Hash for {image_name} already exists.")
+    return
 
 if __name__ == "__main__":
     import sys
@@ -74,8 +77,7 @@ if __name__ == "__main__":
         calculated_hash = calculate_hash(image_name)
         print(f"Hash calculated for image {image_name}: {calculated_hash}")
 
-        if not get_stored_hash(image_name):
-            register_hash(image_name)
+        register_hash(image_name)
         retrieved_hash = get_stored_hash(image_name)
         print(f"Retrieved hash for image {image_name}: {retrieved_hash}")
         
