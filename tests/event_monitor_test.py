@@ -28,7 +28,7 @@ for event in client.events(decode=True):
     if event['Type'] == 'image' and event['Action'] in ['build', 'pull']:
         handle_image_create(event['id'])
     elif event['Type'] == 'container' and event['Action'] in ['run', 'start', 'create', 'restart']:
-        image_name = event['Actor']['Attributes']['Image']
+        image_name = event['Actor']['Attributes']['image']
         handle_container_event(image_name)
 
 # TODO:

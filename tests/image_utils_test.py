@@ -7,14 +7,6 @@ from pathlib import Path
 
 HASH_STORAGE_PATH = "./image_hashes.json"
 
-# def get_image_layer_path(image_name):
-#     """Docker inspect 명령어를 사용하여 이미지 레이어 경로를 가져오는 함수"""
-#     cmd = f"docker inspect --format='{{{{index (split .GraphDriver.Data.LowerDir \":\") 0}}}}' {image_name}"
-#     result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-#     if result.returncode != 0:
-#         raise Exception(f"Failed to get image layer path: {result.stderr}")
-#     return result.stdout.strip()
-
 def get_image_layer_path(image_name):
     """Docker inspect 명령어를 사용하여 이미지 레이어 경로를 가져오는 함수"""
     
