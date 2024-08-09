@@ -1,23 +1,14 @@
-## Description
-[Provide a brief description of the changes in this PR]
+## 설명
+[이 PR에서 변경된 내용에 대한 간단한 설명을 제공해주세요.]
 
-## Key Changes
-- [Change 1]
-- [Change 2]
-- [Change 3]
+## 주요 변경 사항
+- [변경 1]
+- [변경 2]
+- [변경 3]
 
-## Next Steps
-- [Next step 1]
-- [Next step 2]
+## 다음단계
+- [다음 단계 1]
+- [다음 단계 2]
 
-## Additional Notes
-[Any additional information that might be helpful for reviewers]
-
-## Checklist
-- [ ] Code follows the project's coding standards
-- [ ] Tests have been added or updated
-- [ ] Documentation has been updated (if applicable)
-- [ ] All checks and tests are passing
-
-## For Reviewers
-[Any specific areas you'd like reviewers to focus on]
+## 추가정보
+[리뷰어에게 도움이 될 만한 추가 정보를 제공해주세요.]
