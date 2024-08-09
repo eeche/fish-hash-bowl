@@ -5,8 +5,7 @@ client = docker.from_env()
 
 def handle_image_create(image_name):
     get_image_layer_path(image_name)
-    image_hash = calculate_hash(image_name)
-    register_hash(image_name, image_hash)
+    register_hash(image_name)
 
 def handle_container_event(image_name):
     current_hash = calculate_hash(image_name)
@@ -28,7 +27,7 @@ for event in client.events(decode=True):
     print(f"Received event: {event}")
     if event['Type'] == 'image' and event['Action'] in ['build', 'pull']:
         handle_image_create(event['id'])
-    elif event['Type'] == 'container' and event['Action'] in ['run', 'start', 'create']:
+    elif event['Type'] == 'container' and event['Action'] in ['run', 'start', 'create', 'restart']:
         image_name = event['Actor']['Attributes']['Image']
         handle_container_event(image_name)
 
