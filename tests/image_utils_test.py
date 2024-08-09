@@ -7,12 +7,36 @@ from pathlib import Path
 
 HASH_STORAGE_PATH = "./image_hashes.json"
 
+# def get_image_layer_path(image_name):
+#     """Docker inspect 명령어를 사용하여 이미지 레이어 경로를 가져오는 함수"""
+#     cmd = f"docker inspect --format='{{{{index (split .GraphDriver.Data.LowerDir \":\") 0}}}}' {image_name}"
+#     result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+#     if result.returncode != 0:
+#         raise Exception(f"Failed to get image layer path: {result.stderr}")
+#     return result.stdout.strip()
+
 def get_image_layer_path(image_name):
     """Docker inspect 명령어를 사용하여 이미지 레이어 경로를 가져오는 함수"""
-    cmd = f"docker inspect --format='{{{{index (split .GraphDriver.Data.LowerDir \":\") 0}}}}' {image_name}"
+    
+    # 레이어 수 확인
+    layer_cmd = f"docker inspect --format='{{{{json .RootFS.Layers}}}}' {image_name}"
+    layer_result = subprocess.run(layer_cmd, shell=True, capture_output=True, text=True)
+    if layer_result.returncode != 0:
+        raise Exception(f"Failed to get layer information: {layer_result.stderr}")
+    
+    layers = json.loads(layer_result.stdout)
+    
+    if len(layers) == 1:
+        # 단일 레이어인 경우 UpperDir 사용
+        cmd = f"docker inspect --format='{{{{index (split .GraphDriver.Data.UpperDir \":\") 0}}}}' {image_name}"
+    else:
+        # 여러 레이어인 경우 LowerDir 사용
+        cmd = f"docker inspect --format='{{{{index (split .GraphDriver.Data.LowerDir \":\") 0}}}}' {image_name}"
+    
     result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
     if result.returncode != 0:
         raise Exception(f"Failed to get image layer path: {result.stderr}")
+    
     return result.stdout.strip()
 
 def calculate_hash(image_name):
