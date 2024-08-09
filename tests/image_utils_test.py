@@ -73,9 +73,9 @@ if __name__ == "__main__":
     try:
         calculated_hash = calculate_hash(image_name)
         print(f"Hash calculated for image {image_name}: {calculated_hash}")
-        
-        # 이미지 해시값 등록
-        # register_hash(image_name)
+
+        if not get_stored_hash(image_name):
+            register_hash(image_name)
         retrieved_hash = get_stored_hash(image_name)
         print(f"Retrieved hash for image {image_name}: {retrieved_hash}")
         
