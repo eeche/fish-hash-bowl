@@ -1,6 +1,6 @@
 import sys
 import docker
-from image_utils_test import calculate_hash, register_hash
+from image_utils_test import calculate_hash, register_hash, get_stored_hash
 
 def main(image_name):
     """메인 함수: 이미지 해시 계산 및 등록 과정을 관리"""
