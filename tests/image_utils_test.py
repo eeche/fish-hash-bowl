@@ -89,6 +89,8 @@ if __name__ == "__main__":
         sys.exit(1)
     
     image_name = sys.argv[1]
+    if ':' not in image_name:
+        image_name += ':latest'
     try:
         calculated_hash = calculate_hash(image_name)
         print(f"Hash calculated for image {image_name}: {calculated_hash}")
