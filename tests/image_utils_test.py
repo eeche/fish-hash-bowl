@@ -1,7 +1,6 @@
 import os
 import hashlib
 import subprocess
-import requests
 import json
 from pathlib import Path
 
@@ -72,28 +71,29 @@ def get_stored_hash(image_name):
     return hashes.get(image_name)
 
 def register_hash(image_name):
-    """해시값을 로컬에 등록하는 함수"""
-    if not get_stored_hash(image_name): 
-        image_hash = calculate_hash(image_name)
-        save_hash(image_name, image_hash)
-        print(f"Hash for {image_name} registered successfully.")
-    else :
-        print(f"Hash for {image_name} already exists.")
-    return
+    """해시값을 계산하고 로컬에 등록하는 함수"""
+    image_hash = calculate_hash(image_name)
+    save_hash(image_name, image_hash)
+    return True
 
+# 테스트 및 예시 용도의 메인 함수
 if __name__ == "__main__":
     import sys
     
     if len(sys.argv) != 2:
-        print("Usage: python image_utils.py <image_name>")
+        print("Usage: python image_utils_test.py <image_name>")
         sys.exit(1)
     
     image_name = sys.argv[1]
+    if ':' not in image_name:
+        image_name += ':latest'
     try:
         calculated_hash = calculate_hash(image_name)
         print(f"Hash calculated for image {image_name}: {calculated_hash}")
 
-        register_hash(image_name)
+        if register_hash(image_name):
+            print(f"Hash for {image_name} registered successfully.")
+        
         retrieved_hash = get_stored_hash(image_name)
         print(f"Retrieved hash for image {image_name}: {retrieved_hash}")
         
@@ -108,5 +108,4 @@ if __name__ == "__main__":
 # 1. 에러 처리 개선 (예: 네트워크 오류, 서버 응답 오류 등)
 # 2. 로깅 기능 추가
 # 3. 해시 계산 성능 최적화 (예: 병렬 처리)
-# 4. API 요청에 대한 재시도 메커니즘 구현
-# 5. 캐싱 메커니즘 도입하여 반복적인 해시 계산 및 API 요청 최소화
+# 4. 캐싱 메커니즘 도입하여 반복적인 해시 계산 최소화
