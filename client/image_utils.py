@@ -9,7 +9,7 @@ import stat
 
 HASH_STORAGE_PATH = "./image_hashes.json"
 
-API_KEY = "default_apikey"
+API_KEY = "40eb2e1f5d6627cb234fad0f7960b9e05140f7e3ad4fbffcc92577e8f27aa4b7"
 SERVER_URL = "http://localhost:8080"
 
 def get_image_layer_path(image_name):
@@ -128,7 +128,6 @@ def check_integrity(image_name):
             image_name += ':latest'
 
         image_hash = calculate_hash(image_name)
-        print(f"Calculated hash: {image_hash}")
         
         headers = {
             "Authorization": f"Bearer {API_KEY}",
