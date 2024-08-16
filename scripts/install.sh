@@ -3,23 +3,28 @@
 # 설치 디렉토리 설정
 INSTALL_DIR="/opt/fish-hash-client"
 
+# 스크립트의 위치를 기반으로 소스 디렉토리 설정
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+SOURCE_DIR="$PROJECT_ROOT/client"
+
 # 필요한 패키지 설치
 sudo apt-get update
 sudo apt-get install -y python3 python3-pip
 
 # 디렉토리 생성
-sudo mkdir -p $INSTALL_DIR/src
+sudo mkdir -p $INSTALL_DIR
 sudo mkdir -p $INSTALL_DIR/config
 sudo mkdir -p /var/log/fish-hash-client
 
 # 파일 복사
-sudo cp image_utils.py $INSTALL_DIR/src/
-sudo cp integrity_checker.py $INSTALL_DIR/src/
-sudo cp hash_registrar.py $INSTALL_DIR/src/
-sudo cp event_monitor.py $INSTALL_DIR/src/
+sudo cp $SOURCE_DIR/image_utils.py $INSTALL_DIR/
+sudo cp $SOURCE_DIR/integrity_checker.py $INSTALL_DIR/
+sudo cp $SOURCE_DIR/hash_registrar.py $INSTALL_DIR/
+sudo cp $SOURCE_DIR/event_monitor.py $INSTALL_DIR/
 
 # requirements.txt 복사 및 패키지 설치
-sudo cp requirements.txt $INSTALL_DIR/
+sudo cp $PROJECT_ROOT/requirements.txt $INSTALL_DIR/
 sudo pip3 install -r $INSTALL_DIR/requirements.txt
 
 # API 키 및 서버 URL 설정
@@ -39,7 +44,7 @@ EOF
 
 # 권한 설정
 sudo chmod 600 $INSTALL_DIR/config/config.json
-sudo chmod +x $INSTALL_DIR/src/*.py
+sudo chmod +x $INSTALL_DIR/*.py
 
 # 로그 디렉토리 권한 설정
 sudo chown -R root:root /var/log/fish-hash-client
