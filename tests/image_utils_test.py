@@ -49,6 +49,7 @@ def calculate_hash(image_name):
                     sha256_hash.update(byte_block)
     return sha256_hash.hexdigest()
 
+# 중앙 서버 사용 시 필요 없음
 def save_hash(image_name, image_hash):
     """해시값을 로컬 json파일에 저장하는 함수"""
     os.makedirs(os.path.dirname(HASH_STORAGE_PATH), exist_ok=True)
@@ -64,6 +65,7 @@ def save_hash(image_name, image_hash):
     with open(HASH_STORAGE_PATH, 'w') as f:
         json.dump(hashes, f, indent=4)
 
+# 중앙 서버 사용 시 필요 없음
 def get_stored_hash(image_name):
     """로컬 JSON 파일에서 저장된 해시값을 가져오는 함수"""
     if not os.path.exists(HASH_STORAGE_PATH):
@@ -114,7 +116,7 @@ if __name__ == "__main__":
         print(f"Hash calculated for image {image_name}: {calculated_hash}")
 
         if register_hash(image_name):
-            # print(f"Hash for {image_name} registered successfully.")
+            print(f"Hash for {image_name} registered successfully.")
         
         retrieved_hash = get_stored_hash(image_name)
         print(f"Retrieved hash for image {image_name}: {retrieved_hash}")
