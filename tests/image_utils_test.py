@@ -3,7 +3,12 @@ import hashlib
 import subprocess
 import json
 
+import requests
+
 HASH_STORAGE_PATH = "./image_hashes.json"
+
+API_KEY = "default_apikey"
+SERVER_URL = "http://localhost:8080"
 
 def get_image_layer_path(image_name):
     """Docker inspect 명령어를 사용하여 이미지 레이어 경로를 가져오는 함수"""
@@ -44,6 +49,7 @@ def calculate_hash(image_name):
                     sha256_hash.update(byte_block)
     return sha256_hash.hexdigest()
 
+# 중앙 서버 사용 시 필요 없음
 def save_hash(image_name, image_hash):
     """해시값을 로컬 json파일에 저장하는 함수"""
     os.makedirs(os.path.dirname(HASH_STORAGE_PATH), exist_ok=True)
@@ -59,6 +65,7 @@ def save_hash(image_name, image_hash):
     with open(HASH_STORAGE_PATH, 'w') as f:
         json.dump(hashes, f, indent=4)
 
+# 중앙 서버 사용 시 필요 없음
 def get_stored_hash(image_name):
     """로컬 JSON 파일에서 저장된 해시값을 가져오는 함수"""
     if not os.path.exists(HASH_STORAGE_PATH):
@@ -73,6 +80,24 @@ def register_hash(image_name):
     """해시값을 계산하고 로컬에 등록하는 함수"""
     image_hash = calculate_hash(image_name)
     save_hash(image_name, image_hash)
+    # TODO: 중앙 서버에 해시값 등록
+    headers = {
+        "Authorization": f"Bearer {API_KEY}",
+        "Content-Type": "application/json"
+    }
+    data = {
+        "apikey": API_KEY,
+        "docker_image_name": image_name,
+        "docker_image_hash": image_hash
+    }
+    response = requests.post(f"{SERVER_URL}/api/register-docker-hash", headers=headers, json=data)
+    
+    if response.status_code in [200, 201]:
+        print(f"Success: {response.json()['message']}")
+    else:
+        print(f"Failed to register hash for {image_name}. Status code: {response.status_code}")
+        print(f"Error message: {response.json().get('detail', 'Unknown error')}")
+
     return True
 
 # 테스트 및 예시 용도의 메인 함수
