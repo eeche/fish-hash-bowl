@@ -9,7 +9,7 @@ import stat
 
 HASH_STORAGE_PATH = "./image_hashes.json"
 
-API_KEY = "40eb2e1f5d6627cb234fad0f7960b9e05140f7e3ad4fbffcc92577e8f27aa4b7"
+API_KEY = "8e481729abc682e74c4a0433550b0ff4676e75d799f9e6de11c11f2166a8fdce"
 SERVER_URL = "http://localhost:8080"
 
 def get_image_layer_path(image_name):
