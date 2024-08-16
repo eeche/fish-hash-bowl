@@ -5,6 +5,7 @@ import pwd
 import subprocess
 import json
 import requests
+import stat
 
 HASH_STORAGE_PATH = "./image_hashes.json"
 
@@ -38,7 +39,6 @@ def get_image_layer_path(image_name):
 def calculate_hash(image_name):
     """이미지 레이어의 해시값을 매우 세밀하게 계산하는 함수"""
     path = get_image_layer_path(image_name)
-    print(f"Image layer path: {path}")
     if not os.path.exists(path):
         raise FileNotFoundError(f"Path not found: {path}")
 
@@ -48,7 +48,7 @@ def calculate_hash(image_name):
         # 디렉토리 정보 해시에 추가
         dir_stat = os.stat(root)
         sha256_hash.update(f"DIR:{root}".encode())
-        sha256_hash.update(f"MODE:{os.stat.S_IMODE(dir_stat.st_mode)}".encode())
+        sha256_hash.update(f"MODE:{stat.S_IMODE(dir_stat.st_mode)}".encode())
         sha256_hash.update(f"UID:{dir_stat.st_uid}".encode())
         sha256_hash.update(f"GID:{dir_stat.st_gid}".encode())
         sha256_hash.update(f"MTIME:{dir_stat.st_mtime}".encode())
@@ -60,7 +60,7 @@ def calculate_hash(image_name):
             
             # 파일 메타데이터를 해시에 추가
             sha256_hash.update(f"FILE:{filepath}".encode())
-            sha256_hash.update(f"MODE:{os.stat.S_IMODE(file_stat.st_mode)}".encode())
+            sha256_hash.update(f"MODE:{stat.S_IMODE(file_stat.st_mode)}".encode())
             sha256_hash.update(f"UID:{file_stat.st_uid}".encode())
             sha256_hash.update(f"GID:{file_stat.st_gid}".encode())
             sha256_hash.update(f"SIZE:{file_stat.st_size}".encode())
