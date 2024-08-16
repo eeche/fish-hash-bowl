@@ -7,8 +7,8 @@ import requests
 
 HASH_STORAGE_PATH = "./image_hashes.json"
 
-url = 'http://localhost:8080/'
-api = 'default_apikey'
+API_KEY = "default_apikey"
+SERVER_URL = "http://localhost:8080"
 
 def get_image_layer_path(image_name):
     """Docker inspect 명령어를 사용하여 이미지 레이어 경로를 가져오는 함수"""
@@ -82,15 +82,15 @@ def register_hash(image_name):
     save_hash(image_name, image_hash)
     # TODO: 중앙 서버에 해시값 등록
     headers = {
-        "Authorization": f"Bearer {api}",
+        "Authorization": f"Bearer {API_KEY}",
         "Content-Type": "application/json"
     }
     data = {
-        "apikey": api,
+        "apikey": API_KEY,
         "docker_image_name": image_name,
         "docker_image_hash": image_hash
     }
-    response = requests.post(f"{url}/api/register-docker-hash", headers=headers, json=data)
+    response = requests.post(f"{SERVER_URL}/api/register-docker-hash", headers=headers, json=data)
     
     if response.status_code in [200, 201]:
         print(f"Success: {response.json()['message']}")
