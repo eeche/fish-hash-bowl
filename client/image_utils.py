@@ -7,10 +7,16 @@ import json
 import requests
 import stat
 
-HASH_STORAGE_PATH = "./image_hashes.json"
+# 설정 파일 읽기
+config_path = '/opt/fish-hash-client/config/config.json'
+with open(config_path, 'r') as config_file:
+    config = json.load(config_file)
 
-API_KEY = "8e481729abc682e74c4a0433550b0ff4676e75d799f9e6de11c11f2166a8fdce"
-SERVER_URL = "http://localhost:8080"
+API_KEY = config['api_key']
+SERVER_URL = config['server_url']
+
+# API_KEY = "8e481729abc682e74c4a0433550b0ff4676e75d799f9e6de11c11f2166a8fdce"
+# SERVER_URL = "http://localhost:8080"
 
 def get_image_layer_path(image_name):
     """Docker inspect 명령어를 사용하여 이미지 레이어 경로를 가져오는 함수"""
