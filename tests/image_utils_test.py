@@ -2,7 +2,6 @@ import os
 import hashlib
 import subprocess
 import json
-from pathlib import Path
 
 HASH_STORAGE_PATH = "./image_hashes.json"
 

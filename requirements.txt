@@ -1,11 +1,1 @@
-fastapi==0.112.0
-uvicorn==0.30.5
-pydantic==2.8.2
-SQLAlchemy==2.0.32
-requests==2.32.3
-python-dotenv==1.0.1
 docker==5.0.3
-docker-compose==1.29.2
-PyMySQL==1.1.1
-slack_sdk==3.31.0
-splunk-sdk==2.0.2
