@@ -1,2 +1,2 @@
 docker==5.0.3
-requests==2.32.3
+requests==2.26.0
