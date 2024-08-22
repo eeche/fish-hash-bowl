@@ -1,13 +1,21 @@
+import grp
 import os
 import hashlib
+import pwd
 import subprocess
 import json
-
 import requests
+import stat
 
-HASH_STORAGE_PATH = "./image_hashes.json"
+# # 설정 파일 읽기
+# config_path = '/opt/fish-hash-client/config/config.json'
+# with open(config_path, 'r') as config_file:
+#     config = json.load(config_file)
 
-API_KEY = "default_apikey"
+# API_KEY = config['api_key']
+# SERVER_URL = config['server_url']
+
+API_KEY = "8e481729abc682e74c4a0433550b0ff4676e75d799f9e6de11c11f2166a8fdce"
 SERVER_URL = "http://localhost:8080"
 
 def get_image_layer_path(image_name):
@@ -35,101 +43,117 @@ def get_image_layer_path(image_name):
     return result.stdout.strip()
 
 def calculate_hash(image_name):
-    """이미지 레이어의 해시값을 계산하는 함수"""
+    """이미지 레이어의 해시값을 매우 세밀하게 계산하는 함수"""
     path = get_image_layer_path(image_name)
     if not os.path.exists(path):
         raise FileNotFoundError(f"Path not found: {path}")
 
     sha256_hash = hashlib.sha256()
-    for root, _, files in os.walk(path):
-        for file in files:
+    
+    for root, dirs, files in os.walk(path):
+        # 디렉토리 정보 해시에 추가
+        dir_stat = os.stat(root)
+        sha256_hash.update(f"DIR:{root}".encode())
+        sha256_hash.update(f"MODE:{stat.S_IMODE(dir_stat.st_mode)}".encode())
+        sha256_hash.update(f"UID:{dir_stat.st_uid}".encode())
+        sha256_hash.update(f"GID:{dir_stat.st_gid}".encode())
+        sha256_hash.update(f"MTIME:{dir_stat.st_mtime}".encode())
+        
+        # 파일 목록을 정렬하여 일관된 순서 보장
+        for file in sorted(files):
             filepath = os.path.join(root, file)
-            with open(filepath, "rb") as f:
-                for byte_block in iter(lambda: f.read(4096), b""):
-                    sha256_hash.update(byte_block)
+            file_stat = os.stat(filepath)
+            
+            # 파일 메타데이터를 해시에 추가
+            sha256_hash.update(f"FILE:{filepath}".encode())
+            sha256_hash.update(f"MODE:{stat.S_IMODE(file_stat.st_mode)}".encode())
+            sha256_hash.update(f"UID:{file_stat.st_uid}".encode())
+            sha256_hash.update(f"GID:{file_stat.st_gid}".encode())
+            sha256_hash.update(f"SIZE:{file_stat.st_size}".encode())
+            sha256_hash.update(f"MTIME:{file_stat.st_mtime}".encode())
+            sha256_hash.update(f"CTIME:{file_stat.st_ctime}".encode())
+            
+            # 소유자와 그룹 이름 추가 (UID/GID가 변경되지 않아도 이름이 변경될 수 있음)
+            try:
+                owner = pwd.getpwuid(file_stat.st_uid).pw_name
+                group = grp.getgrgid(file_stat.st_gid).gr_name
+                sha256_hash.update(f"OWNER:{owner}".encode())
+                sha256_hash.update(f"GROUP:{group}".encode())
+            except KeyError:
+                # UID/GID에 해당하는 사용자/그룹이 없는 경우
+                pass
+            
+            # 파일 내용을 해시에 추가
+            try:
+                with open(filepath, "rb") as f:
+                    content = f.read()
+                    if content:
+                        sha256_hash.update(content)
+                    else:
+                        sha256_hash.update(b"empty_file")
+            except PermissionError:
+                # 읽기 권한이 없는 경우
+                sha256_hash.update(b"no_read_permission")
+            except IOError as e:
+                # 기타 IO 오류
+                sha256_hash.update(f"io_error:{str(e)}".encode())
+
     return sha256_hash.hexdigest()
 
-# 중앙 서버 사용 시 필요 없음
-def save_hash(image_name, image_hash):
-    """해시값을 로컬 json파일에 저장하는 함수"""
-    os.makedirs(os.path.dirname(HASH_STORAGE_PATH), exist_ok=True)
-    
-    if os.path.exists(HASH_STORAGE_PATH):
-        with open(HASH_STORAGE_PATH, 'r') as f:
-            hashes = json.load(f)
-    else:
-        hashes = {}
-    
-    hashes[image_name] = image_hash
-    
-    with open(HASH_STORAGE_PATH, 'w') as f:
-        json.dump(hashes, f, indent=4)
-
-# 중앙 서버 사용 시 필요 없음
-def get_stored_hash(image_name):
-    """로컬 JSON 파일에서 저장된 해시값을 가져오는 함수"""
-    if not os.path.exists(HASH_STORAGE_PATH):
-        return None
-    
-    with open(HASH_STORAGE_PATH, 'r') as f:
-        hashes = json.load(f)
-    
-    return hashes.get(image_name)
-
 def register_hash(image_name):
-    """해시값을 계산하고 로컬에 등록하는 함수"""
-    image_hash = calculate_hash(image_name)
-    save_hash(image_name, image_hash)
-    # TODO: 중앙 서버에 해시값 등록
-    headers = {
-        "Authorization": f"Bearer {API_KEY}",
-        "Content-Type": "application/json"
-    }
-    data = {
-        "apikey": API_KEY,
-        "docker_image_name": image_name,
-        "docker_image_hash": image_hash
-    }
-    response = requests.post(f"{SERVER_URL}/api/register-docker-hash", headers=headers, json=data)
-    
-    if response.status_code in [200, 201]:
-        print(f"Success: {response.json()['message']}")
-    else:
-        print(f"Failed to register hash for {image_name}. Status code: {response.status_code}")
-        print(f"Error message: {response.json().get('detail', 'Unknown error')}")
-
-    return True
-
-# 테스트 및 예시 용도의 메인 함수
-if __name__ == "__main__":
-    import sys
-    
-    if len(sys.argv) != 2:
-        print("Usage: python image_utils_test.py <image_name>")
-        sys.exit(1)
-    
-    image_name = sys.argv[1]
-    if ':' not in image_name:
-        image_name += ':latest'
+    """해시값을 계산하고 서버에 등록하는 함수"""
     try:
-        calculated_hash = calculate_hash(image_name)
-        print(f"Hash calculated for image {image_name}: {calculated_hash}")
+        if ':' not in image_name:
+            image_name += ':latest'
 
-        if register_hash(image_name):
-            print(f"Hash for {image_name} registered successfully.")
+        image_hash = calculate_hash(image_name)
+        headers = {
+            "Authorization": f"Bearer {API_KEY}",
+            "Content-Type": "application/json"
+        }
+        data = {
+            "apikey": API_KEY,
+            "docker_image_name": image_name,
+            "docker_image_hash": image_hash
+        }
+        response = requests.post(f"{SERVER_URL}/api/register-docker-hash", headers=headers, json=data)
         
-        retrieved_hash = get_stored_hash(image_name)
-        print(f"Retrieved hash for image {image_name}: {retrieved_hash}")
-        
-        if calculated_hash == retrieved_hash:
-            print("Hash verification successful!")
+        if response.status_code in [200, 201]:
+            return True
         else:
-            print("Hash verification failed!")
+            return False
+
     except Exception as e:
         print(f"An error occurred: {str(e)}")
+        return False
 
-# TODO:
-# 1. 에러 처리 개선 (예: 네트워크 오류, 서버 응답 오류 등)
-# 2. 로깅 기능 추가
-# 3. 해시 계산 성능 최적화 (예: 병렬 처리)
-# 4. 캐싱 메커니즘 도입하여 반복적인 해시 계산 최소화
+def check_integrity(image_name):
+    """해시값을 계산하고 서버에 검증 요청을 보내는 함수"""
+    try:
+        if ':' not in image_name:
+            image_name += ':latest'
+
+        image_hash = calculate_hash(image_name)
+        
+        headers = {
+            "Authorization": f"Bearer {API_KEY}",
+            "Content-Type": "application/json"
+        }
+        data = {
+            "apikey": API_KEY,
+            "docker_image_name": image_name,
+            "docker_image_hash": image_hash
+        }
+        response = requests.post(f"{SERVER_URL}/api/verify-docker-hash", headers=headers, json=data)
+        
+        if response.status_code == 200:
+            result = response.json()
+            return result["match"]
+        elif response.status_code == 404:
+            return False
+        else:
+            return False
+
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
+        return False
